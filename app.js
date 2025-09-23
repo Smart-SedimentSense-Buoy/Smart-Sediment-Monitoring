@@ -28,7 +28,42 @@ const buoys = [
   // Assign initial status
   buoys.forEach(b => {
     b.status = getStatusFromSensors(b.flow, b.sediment);
+    b.address = null;
   });
+
+  // --- Reverse Geocoding (lat/lng -> address) ---
+  async function reverseGeocode(lat, lng) {
+    try {
+      const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lng)}&zoom=14`;
+      const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+      if (!res.ok) throw new Error('Reverse geocoding failed');
+      const data = await res.json();
+      return data.display_name || '';
+    } catch (_) {
+      return '';
+    }
+  }
+  async function ensureAddressFor(buoy) {
+    if (buoy.address) return;
+    buoy.address = await reverseGeocode(buoy.lat, buoy.lng);
+    // Update summary if showing this buoy
+    if (typeof summaryBuoySelect !== 'undefined' && summaryBuoySelect) {
+      if (summaryBuoySelect.value === buoy.id) {
+        const event = new Event('change');
+        summaryBuoySelect.dispatchEvent(event);
+      }
+    }
+    // Update popup with address now available
+    if (markers[buoy.id]) {
+      markers[buoy.id].bindPopup(`
+        <b>${buoy.name}</b><br>
+        Status: ${buoy.status}<br>
+        Location: ${buoy.address ? buoy.address : 'Resolving...'}
+        <br><button class="btn btn-sm btn-link p-0" onclick="showInfo('${buoy.id}')">More info</button> | 
+        <button class="btn btn-sm btn-link p-0" onclick="openEdit('${buoy.id}')">Edit buoy</button>
+      `);
+    }
+  }
   
   // --- Temperature Line Chart ---
   const tempChart = new Chart(document.getElementById('tempChart'), {
@@ -66,12 +101,15 @@ const buoys = [
   
     marker.bindPopup(`
       <b>${b.name}</b><br>
-      Status: ${b.status}
+      Status: ${b.status}<br>
+      Location: ${b.address ? b.address : 'Resolving...'}
       <br><button class="btn btn-sm btn-link p-0" onclick="showInfo('${b.id}')">More info</button> | 
       <button class="btn btn-sm btn-link p-0" onclick="openEdit('${b.id}')">Edit buoy</button>
     `);
   
     markers[b.id] = marker;
+    // kickoff reverse geocoding
+    ensureAddressFor(b);
   });
   
   // --- Status Chart ---
@@ -110,7 +148,9 @@ const buoys = [
         <div><b>Temperature:</b> ${b.temp.toFixed(1)} °C</div>
         <div><b>With Sediment:</b> ${b.sediment ? 'Yes' : 'No'}</div>
         <div class="text-muted">Lat/Lng: ${b.lat.toFixed(5)}, ${b.lng.toFixed(5)}</div>
+        <div><b>Location:</b> ${b.address ? b.address : 'Resolving...'}</div>
       `;
+      ensureAddressFor(b);
     }
     summaryBuoySelect.addEventListener('change', renderSummary);
     // initial
@@ -240,6 +280,7 @@ const buoys = [
       markers[b.id].bindPopup(`
         <b>${b.name}</b><br>
         Status: <span style="color:${STATUS_COLORS[b.status]}">${b.status}</span><br>
+        Location: ${b.address ? b.address : 'Resolving...'}<br>
         Water level: ${b.level.toFixed(2)} m<br>
         Flowrate: ${b.flow.toFixed(2)} m/s<br>
         Temperature: ${b.temp.toFixed(1)} °C<br>
@@ -247,6 +288,7 @@ const buoys = [
         <br><button class="btn btn-sm btn-link p-0" onclick="showInfo('${b.id}')">More info</button> | 
         <button class="btn btn-sm btn-link p-0" onclick="openEdit('${b.id}')">Edit buoy</button>
       `);
+      ensureAddressFor(b);
     });
   
     flowChart.update();
