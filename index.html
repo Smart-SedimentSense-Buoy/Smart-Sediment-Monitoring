@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Buoy Monitoring System</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <style>
+    body, html { height: 100%; margin: 0; }
+    #app {
+      display: grid;
+      grid-template-columns: 1fr 450px;
+      gap: 12px;
+      height: 100vh;
+      padding: 12px;
+      box-sizing: border-box;
+    }
+    #map { width: 100%; height: 100%; border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,.08); }
+    .panel { display: flex; flex-direction: column; gap: 12px; height: 100%; }
+    #logTable { font-size: 0.85rem; max-height: 150px; overflow-y: auto; }
+    .color-dot { width:12px;height:12px;border-radius:50%;display:inline-block;border:1px solid rgba(0,0,0,.2); }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- Map -->
+    <div id="map"></div>
+
+    <!-- Right Panel -->
+    <div class="panel">
+     
+      <div class="card p-3">
+        <h5 class="mb-2">Buoy Monitor</h5>
+        <button class="btn btn-sm btn-primary" id="openModalBtn">Edit Buoy Status</button>
+      </div>
+      
+      <div class="card p-3">
+        <h6>Status Distribution</h6>
+        <canvas id="statusChart" style="max-height:200px;"></canvas>
+      </div>
+
+      <div class="card p-3">
+        <h6>Flowrate / Velocity (m/s)</h6>
+        <canvas id="flowChart" style="max-height:200px;"></canvas>
+      </div>
+
+      <div class="card p-3">
+        <h6>Monitoring Log</h6>
+        <div id="logTable" class="table-responsive">
+          <table class="table table-sm table-bordered">
+            <thead class="table-light">
+              <tr>
+                <th>Time</th>
+                <th>Buoy</th>
+                <th>Status</th>
+                <th>Flowrate</th>
+                <th>Sediment</th>
+              </tr>
+            </thead>
+            <tbody id="logBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Status Modal -->
+  <div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog">
+      <form id="editForm" class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Edit Buoy Status</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <label class="form-label">Buoy</label>
+          <select id="buoySelect" class="form-select mb-3"></select>
+
+          <label class="form-label">Status</label>
+          <select id="statusSelect" class="form-select mb-3">
+            <option value="normal">Normal (Green)</option>
+            <option value="warning">Warning (Yellow)</option>
+            <option value="flood">Flood / Sedimentation (Red)</option>
+          </select>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Detailed Info Modal -->
+  <div class="modal fade" id="infoModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Buoy Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" id="infoContent"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Leaflet, Chart.js, Bootstrap JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Our JS -->
+  <script src="app.js"></script>
+</body>
+</html>
