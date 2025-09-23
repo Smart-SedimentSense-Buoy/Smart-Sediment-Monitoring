@@ -13,38 +13,67 @@
 
   <style>
     :root { --stroke: rgba(0,0,0,0.08); --radius: 10px; }
-    html, body { height:100%; }
-    body { margin:0; background:#f7f7fb; color:#212529; }
-    .header { display:flex; align-items:center; justify-content:space-between; padding: 12px 16px; border-bottom: 1px solid var(--stroke); background:#ffffff; }
+    html, body { height:100%; margin:0; background:#f7f7fb; color:#212529; }
+    .header { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid var(--stroke); background:#ffffff; }
     .brand { display:flex; align-items:center; gap:10px; font-weight:600; letter-spacing:.3px; }
-    .brand-badge { width:10px; height:10px; border-radius:50%; background: #0d6efd; }
+    .brand-badge { width:10px; height:10px; border-radius:50%; background:#0d6efd; }
+
     #app {
       display: grid;
-      grid-template-columns: 1fr 460px;
+      grid-template-rows: auto 1fr auto;
       gap: 14px;
       height: calc(100vh - 58px);
       padding: 14px;
       box-sizing: border-box;
+      overflow-y: auto;
     }
-    #map { width: 100%; height: 100%; border-radius: var(--radius); border: 1px solid var(--stroke); background:#e9ecef; }
-    .panel { display: flex; flex-direction: column; gap: 14px; height: 100%; }
-    .card { background: #ffffff; border: 1px solid var(--stroke); border-radius: var(--radius); box-shadow: 0 4px 14px rgba(0,0,0,0.06); }
+
+    .top-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 14px;
+      height: 100%;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+      min-height: 500px;
+      border-radius: var(--radius);
+      border: 1px solid var(--stroke);
+      background:#e9ecef;
+    }
+
+    .card-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      height: 100%;
+    }
+
+    .card {
+      background: #ffffff;
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+    }
     .card h5, .card h6 { margin: 0 0 6px 0; }
     .card.p-3 { padding: 14px !important; }
-    #logTable { font-size: 0.85rem; max-height: 150px; overflow-y: auto; }
-    .table thead { background: #f1f3f5; }
-    .table tbody tr { background: #ffffff; }
-    .color-dot { width:12px;height:12px;border-radius:50%;display:inline-block;border:1px solid rgba(0,0,0,.2); }
-    .form-select, .form-control { background: #ffffff; color: #212529; border: 1px solid var(--stroke); }
-    .modal-content { background: #ffffff; color: #212529; border: 1px solid var(--stroke); }
-    .table-bordered>:not(caption)>* { border-color: rgba(0,0,0,0.12); }
-    /* KPI chips */
+
     .kpis { display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; }
-    .kpi { display:flex; flex-direction:column; gap:4px; padding:10px; border-radius:10px; background:#ffffff; border:1px solid var(--stroke); box-shadow: 0 4px 14px rgba(0,0,0,0.06); }
-    .kpi .label { font-size: 0.75rem; color: #6c757d; }
-    .kpi .value { font-weight: 700; font-size: 1.1rem; letter-spacing:.3px; }
-    .legend { display:flex; flex-wrap:wrap; gap:10px; }
-    .legend-item { display:flex; align-items:center; gap:6px; padding:6px 8px; border-radius:10px; background:#ffffff; border: 1px solid var(--stroke); }
+    .kpi { display:flex; flex-direction:column; gap:4px; padding:10px; border-radius:10px; background:#ffffff; border:1px solid var(--stroke); box-shadow:0 4px 14px rgba(0,0,0,0.06); }
+    .kpi .label { font-size:0.75rem; color:#6c757d; }
+    .kpi .value { font-weight:700; font-size:1.1rem; letter-spacing:.3px; }
+
+    .bottom-panel {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    #logTable { font-size:0.85rem; max-height:150px; overflow-y:auto; }
+    .table thead { background:#f1f3f5; }
+    .table tbody tr { background:#ffffff; }
   </style>
 </head>
 <body>
@@ -52,56 +81,59 @@
     <div class="brand"><span class="brand-badge"></span> Smart Sediment Monitoring</div>
     <div class="small" style="color:var(--muted)">Realtime River Buoy Network</div>
   </div>
+
   <div id="app">
-    <!-- Map -->
-    <div id="map"></div>
+    <!-- Top Row -->
+    <div class="top-row">
+      <div id="map"></div>
 
-    <!-- Right Panel -->
-    <div class="panel">
-     
-      <div class="card p-3">
-        <h5 class="mb-2">Buoy Monitor</h5>
-      </div>
-
-      <div class="card p-3">
-        <div class="d-flex align-items-center justify-content-between mb-2">
-          <h6 class="m-0">Network KPIs</h6>
+      <div class="card-stack">
+        <div class="card p-3">
+          <h5 class="mb-2">Buoy Monitor</h5>
+          <!-- Controls -->
+          <select id="buoySelect" class="form-select form-select-sm mb-2"></select>
+          <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#editModal">Edit Buoy</button>
         </div>
-        <div class="kpis">
-          <div class="kpi"><div class="label">Total Buoys</div><div id="kpiTotal" class="value">0</div></div>
-          <div class="kpi"><div class="label">Normal</div><div id="kpiNormal" class="value">0</div></div>
-          <div class="kpi"><div class="label">Warning</div><div id="kpiWarning" class="value">0</div></div>
-          <div class="kpi"><div class="label">Flood</div><div id="kpiFlood" class="value">0</div></div>
+
+        <div class="card p-3">
+          <h6>Network KPIs</h6>
+          <div class="kpis">
+            <div class="kpi"><div class="label">Total Buoys</div><div id="kpiTotal" class="value">0</div></div>
+            <div class="kpi"><div class="label">Online</div><div id="kpiOnline" class="value">0</div></div>
+            <div class="kpi"><div class="label">Offline</div><div id="kpiOffline" class="value">0</div></div>
+            <div class="kpi"><div class="label">Displaced</div><div id="kpiDisplaced" class="value">0</div></div>
+          </div>
+        </div>
+
+
+        <div class="card p-3">
+          <h6>Status Distribution</h6>
+          <canvas id="statusChart" style="max-height:200px;"></canvas>
+        </div>
+
+        <div class="card p-3">
+          <h6>Buoy Summary</h6>
+          <select id="summaryBuoySelect" class="form-select form-select-sm mb-2"></select>
+          <div id="summaryContent" class="small"></div>
         </div>
       </div>
-      
-      <div class="card p-3">
-        <h6>Status Distribution</h6>
-        <canvas id="statusChart" style="max-height:200px;"></canvas>
-      </div>
+    </div>
 
-      <div class="card p-3">
-        <h6>Buoy Summary</h6>
-        <select id="summaryBuoySelect" class="form-select form-select-sm mb-2"></select>
-        <div id="summaryContent" class="small"></div>
-      </div>
-
+    <!-- Bottom Panel -->
+    <div class="bottom-panel">
       <div class="card p-3">
         <h6>Flowrate / Velocity (m/s)</h6>
         <canvas id="flowChart" style="max-height:200px;"></canvas>
       </div>
-
       <div class="card p-3">
         <h6>Water Level (m)</h6>
         <canvas id="waterLevelChart" style="max-height:200px;"></canvas>
       </div>
-
       <div class="card p-3">
         <h6>Temperature (°C)</h6>
         <canvas id="tempChart" style="max-height:200px;"></canvas>
       </div>
-
-      <div class="card p-3">
+      <div class="card p-3" style="grid-column: span 3">
         <h6>Monitoring Log</h6>
         <div id="logTable" class="table-responsive">
           <table class="table table-sm table-bordered">
@@ -124,46 +156,40 @@
   </div>
 
   <!-- Toasts -->
-  <div class="position-fixed" style="bottom:16px; right:16px; z-index:1080">
-    <div id="toastContainer" class="toast-container"></div>
-  </div>
+  <div id="toastContainer" class="toast-container position-fixed bottom-0 end-0 p-3"></div>
 
-  <!-- Edit Status Modal -->
-  <div class="modal fade" id="editModal" tabindex="-1">
-    <div class="modal-dialog">
-      <form id="editForm" class="modal-content">
+  <!-- Info Modal -->
+  <div class="modal fade" id="infoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content p-3">
         <div class="modal-header">
-          <h5 class="modal-title">Edit Buoy Status</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <label class="form-label">Buoy</label>
-          <select id="buoySelect" class="form-select mb-3"></select>
-
-          <label class="form-label">Status</label>
-          <select id="statusSelect" class="form-select mb-3">
-            <option value="normal">Normal (Green)</option>
-            <option value="warning">Warning (Yellow)</option>
-            <option value="flood">Flood / Sedimentation (Red)</option>
-          </select>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <button type="submit" class="btn btn-primary">Save</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Detailed Info Modal -->
-  <div class="modal fade" id="infoModal" tabindex="-1">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Buoy Details</h5>
+          <h5 class="modal-title">Buoy Info</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body" id="infoContent"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Modal -->
+  <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content p-3">
+        <div class="modal-header">
+          <h5 class="modal-title">Edit Buoy</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <form id="editForm" class="modal-body">
+          <div class="mb-3">
+            <label for="statusSelect" class="form-label">Status</label>
+            <select id="statusSelect" class="form-select">
+              <option value="Normal">Normal</option>
+              <option value="Warning">Warning</option>
+              <option value="Flood">Flood</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </form>
       </div>
     </div>
   </div>
@@ -172,8 +198,6 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
-  <!-- Our JS -->
   <script src="app.js"></script>
 </body>
 </html>

@@ -121,7 +121,7 @@ const buoys = [
   });
 
   // --- Map ---
-  const map = L.map('map', { zoomControl: false }).setView([8.49, 124.82], 12);
+  const map = L.map('map', { zoomControl: false }).setView([8.49, 124.82], 10);
   // Light basemap
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
   L.control.zoom({ position: 'bottomright' }).addTo(map);
@@ -172,13 +172,19 @@ const buoys = [
     statusChart.update();
     // Update KPI chips
     const kpiTotal = document.getElementById('kpiTotal');
-    const kpiNormal = document.getElementById('kpiNormal');
-    const kpiWarning = document.getElementById('kpiWarning');
-    const kpiFlood = document.getElementById('kpiFlood');
+    const kpiOnline = document.getElementById('kpiOnline');
+    const kpiOffline = document.getElementById('kpiOffline');
+    const kpiDisplaced = document.getElementById('kpiDisplaced');
+
+
     if (kpiTotal) kpiTotal.textContent = buoys.length.toString();
-    if (kpiNormal) kpiNormal.textContent = ((counts['normal']||0) + (counts['normal with sediments']||0)).toString();
-    if (kpiWarning) kpiWarning.textContent = ((counts['warning']||0) + (counts['warning with sediments']||0)).toString();
-    if (kpiFlood) kpiFlood.textContent = ((counts['flood']||0) + (counts['flood with sediments']||0)).toString();
+
+    // Example logic for online/offline/displaced
+    if (kpiOnline) kpiOnline.textContent = buoys.filter(b => b.status && b.status !== 'offline' && b.status !== 'displaced').length;
+    if (kpiOffline) kpiOffline.textContent = buoys.filter(b => b.status === 'offline').length;
+    if (kpiDisplaced) kpiDisplaced.textContent = buoys.filter(b => b.status === 'displaced').length;
+
+
   }
   updateChart();
   
