@@ -29,7 +29,42 @@ const buoys = [
   buoys.forEach(b => {
     b.status = getStatusFromSensors(b.flow, b.sediment);
     b.address = null;
+    b.previousStatus = b.status;
   });
+
+  // Severity ranking for status escalation detection
+  const STATUS_SEVERITY = {
+    'normal': 0,
+    'normal with sediments': 1,
+    'warning': 2,
+    'warning with sediments': 3,
+    'flood': 4,
+    'flood with sediments': 5
+  };
+
+  // Toast helper
+  const toastContainer = document.getElementById('toastContainer');
+  function showToast(title, body, color) {
+    if (!toastContainer) return;
+    const wrapper = document.createElement('div');
+    wrapper.className = 'toast align-items-center text-bg-dark border-0 mb-2';
+    wrapper.setAttribute('role', 'alert');
+    wrapper.setAttribute('aria-live', 'assertive');
+    wrapper.setAttribute('aria-atomic', 'true');
+    wrapper.innerHTML = `
+      <div class="d-flex">
+        <div class="toast-body">
+          <div class="fw-semibold" style="color:${color}">${title}</div>
+          <div class="small">${body}</div>
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+    `;
+    toastContainer.appendChild(wrapper);
+    const toast = new bootstrap.Toast(wrapper, { delay: 5000 });
+    toast.show();
+    wrapper.addEventListener('hidden.bs.toast', () => wrapper.remove());
+  }
 
   // --- Reverse Geocoding (lat/lng -> address) ---
   async function reverseGeocode(lat, lng) {
@@ -86,8 +121,10 @@ const buoys = [
   });
 
   // --- Map ---
-  const map = L.map('map').setView([8.49, 124.82], 12);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+  const map = L.map('map', { zoomControl: false }).setView([8.49, 124.82], 12);
+  // Light basemap
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
+  L.control.zoom({ position: 'bottomright' }).addTo(map);
   const markers = {};
   
   buoys.forEach(b => {
@@ -123,12 +160,25 @@ const buoys = [
       }]
     }
   });
+  // Reset to light defaults for charts
+  Chart.defaults.color = '#212529';
+  Chart.defaults.borderColor = 'rgba(0,0,0,0.1)';
+  Chart.defaults.plugins.legend.labels.color = '#212529';
   function updateChart(){
     const counts = {};
     Object.keys(STATUS_COLORS).forEach(k => counts[k] = 0);
     buoys.forEach(b => counts[b.status]++);
     statusChart.data.datasets[0].data = Object.keys(STATUS_COLORS).map(k => counts[k]);
     statusChart.update();
+    // Update KPI chips
+    const kpiTotal = document.getElementById('kpiTotal');
+    const kpiNormal = document.getElementById('kpiNormal');
+    const kpiWarning = document.getElementById('kpiWarning');
+    const kpiFlood = document.getElementById('kpiFlood');
+    if (kpiTotal) kpiTotal.textContent = buoys.length.toString();
+    if (kpiNormal) kpiNormal.textContent = ((counts['normal']||0) + (counts['normal with sediments']||0)).toString();
+    if (kpiWarning) kpiWarning.textContent = ((counts['warning']||0) + (counts['warning with sediments']||0)).toString();
+    if (kpiFlood) kpiFlood.textContent = ((counts['flood']||0) + (counts['flood with sediments']||0)).toString();
   }
   updateChart();
   
@@ -251,6 +301,7 @@ const buoys = [
       b.level = Math.max(0.3, b.level + (Math.random()-0.5)*0.06);
       b.temp = Math.max(20, Math.min(35, b.temp + (Math.random()-0.5)*0.3));
       if (Math.random() > 0.7) b.sediment = !b.sediment;
+      const oldStatus = b.status;
       b.status = getStatusFromSensors(b.flow, b.sediment);
   
       flowChart.data.datasets[i].data.push(b.flow.toFixed(2));
@@ -277,6 +328,12 @@ const buoys = [
       logBody.prepend(row);
   
       markers[b.id].setStyle({ fillColor: STATUS_COLORS[b.status] });
+      // Pulse effect for flood statuses by briefly increasing radius
+      if ((b.status === 'flood' || b.status === 'flood with sediments')) {
+        const current = markers[b.id].options.radius || 10;
+        markers[b.id].setStyle({ radius: current + 2 });
+        setTimeout(() => markers[b.id] && markers[b.id].setStyle({ radius: current }), 400);
+      }
       markers[b.id].bindPopup(`
         <b>${b.name}</b><br>
         Status: <span style="color:${STATUS_COLORS[b.status]}">${b.status}</span><br>
@@ -289,6 +346,11 @@ const buoys = [
         <button class="btn btn-sm btn-link p-0" onclick="openEdit('${b.id}')">Edit buoy</button>
       `);
       ensureAddressFor(b);
+
+      // Toast on escalation
+      if (STATUS_SEVERITY[b.status] > STATUS_SEVERITY[oldStatus]) {
+        showToast(`${b.name} status escalated`, `${oldStatus} → ${b.status}`, STATUS_COLORS[b.status]);
+      }
     });
   
     flowChart.update();

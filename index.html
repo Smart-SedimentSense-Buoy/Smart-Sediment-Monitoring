@@ -12,22 +12,46 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
   <style>
-    body, html { height: 100%; margin: 0; }
+    :root { --stroke: rgba(0,0,0,0.08); --radius: 10px; }
+    html, body { height:100%; }
+    body { margin:0; background:#f7f7fb; color:#212529; }
+    .header { display:flex; align-items:center; justify-content:space-between; padding: 12px 16px; border-bottom: 1px solid var(--stroke); background:#ffffff; }
+    .brand { display:flex; align-items:center; gap:10px; font-weight:600; letter-spacing:.3px; }
+    .brand-badge { width:10px; height:10px; border-radius:50%; background: #0d6efd; }
     #app {
       display: grid;
-      grid-template-columns: 1fr 450px;
-      gap: 12px;
-      height: 100vh;
-      padding: 12px;
+      grid-template-columns: 1fr 460px;
+      gap: 14px;
+      height: calc(100vh - 58px);
+      padding: 14px;
       box-sizing: border-box;
     }
-    #map { width: 100%; height: 100%; border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,.08); }
-    .panel { display: flex; flex-direction: column; gap: 12px; height: 100%; }
+    #map { width: 100%; height: 100%; border-radius: var(--radius); border: 1px solid var(--stroke); background:#e9ecef; }
+    .panel { display: flex; flex-direction: column; gap: 14px; height: 100%; }
+    .card { background: #ffffff; border: 1px solid var(--stroke); border-radius: var(--radius); box-shadow: 0 4px 14px rgba(0,0,0,0.06); }
+    .card h5, .card h6 { margin: 0 0 6px 0; }
+    .card.p-3 { padding: 14px !important; }
     #logTable { font-size: 0.85rem; max-height: 150px; overflow-y: auto; }
+    .table thead { background: #f1f3f5; }
+    .table tbody tr { background: #ffffff; }
     .color-dot { width:12px;height:12px;border-radius:50%;display:inline-block;border:1px solid rgba(0,0,0,.2); }
+    .form-select, .form-control { background: #ffffff; color: #212529; border: 1px solid var(--stroke); }
+    .modal-content { background: #ffffff; color: #212529; border: 1px solid var(--stroke); }
+    .table-bordered>:not(caption)>* { border-color: rgba(0,0,0,0.12); }
+    /* KPI chips */
+    .kpis { display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; }
+    .kpi { display:flex; flex-direction:column; gap:4px; padding:10px; border-radius:10px; background:#ffffff; border:1px solid var(--stroke); box-shadow: 0 4px 14px rgba(0,0,0,0.06); }
+    .kpi .label { font-size: 0.75rem; color: #6c757d; }
+    .kpi .value { font-weight: 700; font-size: 1.1rem; letter-spacing:.3px; }
+    .legend { display:flex; flex-wrap:wrap; gap:10px; }
+    .legend-item { display:flex; align-items:center; gap:6px; padding:6px 8px; border-radius:10px; background:#ffffff; border: 1px solid var(--stroke); }
   </style>
 </head>
 <body>
+  <div class="header">
+    <div class="brand"><span class="brand-badge"></span> Smart Sediment Monitoring</div>
+    <div class="small" style="color:var(--muted)">Realtime River Buoy Network</div>
+  </div>
   <div id="app">
     <!-- Map -->
     <div id="map"></div>
@@ -37,7 +61,18 @@
      
       <div class="card p-3">
         <h5 class="mb-2">Buoy Monitor</h5>
-        <button class="btn btn-sm btn-primary" id="openModalBtn">Edit Buoy Status</button>
+      </div>
+
+      <div class="card p-3">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <h6 class="m-0">Network KPIs</h6>
+        </div>
+        <div class="kpis">
+          <div class="kpi"><div class="label">Total Buoys</div><div id="kpiTotal" class="value">0</div></div>
+          <div class="kpi"><div class="label">Normal</div><div id="kpiNormal" class="value">0</div></div>
+          <div class="kpi"><div class="label">Warning</div><div id="kpiWarning" class="value">0</div></div>
+          <div class="kpi"><div class="label">Flood</div><div id="kpiFlood" class="value">0</div></div>
+        </div>
       </div>
       
       <div class="card p-3">
@@ -86,6 +121,11 @@
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- Toasts -->
+  <div class="position-fixed" style="bottom:16px; right:16px; z-index:1080">
+    <div id="toastContainer" class="toast-container"></div>
   </div>
 
   <!-- Edit Status Modal -->
