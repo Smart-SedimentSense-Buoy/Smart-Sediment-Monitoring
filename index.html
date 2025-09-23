@@ -88,15 +88,9 @@
       <div id="map"></div>
 
       <div class="card-stack">
-        <div class="card p-3">
-          <h5 class="mb-2">Buoy Monitor</h5>
-          <!-- Controls -->
-          <select id="buoySelect" class="form-select form-select-sm mb-2"></select>
-          <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#editModal">Edit Buoy</button>
-        </div>
 
         <div class="card p-3">
-          <h6>Network KPIs</h6>
+          <h6>Bouy KPIs</h6>
           <div class="kpis">
             <div class="kpi"><div class="label">Total Buoys</div><div id="kpiTotal" class="value">0</div></div>
             <div class="kpi"><div class="label">Online</div><div id="kpiOnline" class="value">0</div></div>
@@ -109,6 +103,12 @@
         <div class="card p-3">
           <h6>Status Distribution</h6>
           <canvas id="statusChart" style="max-height:200px;"></canvas>
+        </div>
+        <div class="card p-3">
+          <h5 class="mb-2">Buoy Manager</h5>
+          <!-- Controls -->
+          <select id="buoySelect" class="form-select form-select-sm mb-2"></select>
+          <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#editModal">Manage Buoy</button>
         </div>
 
         <div class="card p-3">
