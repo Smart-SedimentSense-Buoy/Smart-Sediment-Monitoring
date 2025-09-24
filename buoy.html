@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Buoy</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+  <!-- Cards Container -->
+  <div id="buoyCards" class="row g-3 p-3"></div>
+
+<script>
+  // --- Status Colors ---
+  const STATUS_COLORS = {
+    Normal: "green",
+    Warning: "orange",
+    Critical: "red"
+  };
+
+  // --- Buoy Data ---
+  const buoys = [
+    { id: 'B01', name: 'Buoy 01', lat: 8.4735907, lng: 124.8698826, flow: 2.5, level: 1.20, temp: 28.3, sediment: false, status: "Normal" },
+    { id: 'B02', name: 'Buoy 02', lat: 8.5151001, lng: 124.8063018, flow: 1.8, level: 0.95, temp: 27.4, sediment: true, status: "Warning" },
+    { id: 'B03', name: 'Buoy 03', lat: 8.5390109, lng: 124.7704314, flow: 1.2, level: 1.40, temp: 29.1, sediment: false, status: "Critical" }
+  ];
+
+  // --- Cards Renderer ---
+  const buoyCardsContainer = document.getElementById('buoyCards');
+
+  function renderBuoyCards() {
+    buoyCardsContainer.innerHTML = buoys.map(b => `
+      <div class="col-md-4">
+        <div class="card shadow-sm h-100">
+          <div class="card-body">
+            <h5 class="card-title">${b.name} (${b.id})</h5>
+            <p class="card-text mb-1"><b>Status:</b> 
+              <span style="color:${STATUS_COLORS[b.status]}">${b.status}</span>
+            </p>
+            <p class="card-text mb-1"><b>Water Level:</b> ${b.level.toFixed(2)} m</p>
+            <p class="card-text mb-1"><b>Flowrate:</b> ${b.flow.toFixed(2)} m/s</p>
+            <p class="card-text mb-1"><b>Temperature:</b> ${b.temp.toFixed(1)} °C</p>
+            <p class="card-text mb-1"><b>With Sediment:</b> ${b.sediment ? 'Yes' : 'No'}</p>
+            <p class="card-text small text-muted">Lat/Lng: ${b.lat.toFixed(5)}, ${b.lng.toFixed(5)}</p>
+            <p class="card-text"><b>Location:</b> ${b.address ? b.address : 'Resolving...'}</p>
+            <div class="d-flex justify-content-between">
+              <button class="btn btn-sm btn-outline-primary" onclick="showInfo('${b.id}')">More info</button>
+              <button class="btn btn-sm btn-outline-secondary" onclick="openEdit('${b.id}')">Edit</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // --- Dummy Handlers ---
+  function showInfo(id) {
+    alert("Showing info for buoy: " + id);
+  }
+  function openEdit(id) {
+    alert("Editing buoy: " + id);
+  }
+
+  // --- Initial Render ---
+  renderBuoyCards();
+
+  // --- Example tick() handler (optional) ---
+  function tick() {
+    // Simulate updates here if needed
+    renderBuoyCards();
+  }
+</script>
+</body>
+</html>
