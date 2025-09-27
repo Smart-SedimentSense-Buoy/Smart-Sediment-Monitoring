@@ -322,16 +322,31 @@ const buoys = [
       if(tempChart.data.datasets[i].data.length > 10) {
         tempChart.data.datasets[i].data.shift();
       }
-  
+      
+     function getLogTimestamp() {
+        const now = new Date();
+        return (
+          now.getFullYear() + "-" +
+          String(now.getMonth() + 1).padStart(2, "0") + "-" +
+          String(now.getDate()).padStart(2, "0") + " " +
+          String(now.getHours()).padStart(2, "0") + ":" +
+          String(now.getMinutes()).padStart(2, "0") + ":" +
+          String(now.getSeconds()).padStart(2, "0")
+        );
+      }
+
+      // usage in your table row:
+      const timestamp = getLogTimestamp();
       const row = document.createElement('tr');
-      row.innerHTML = `<td>${now}</td>
+      row.innerHTML = `
                        <td>${b.name}</td>
                        <td><span class="color-dot" style="background:${STATUS_COLORS[b.status]}"></span> ${b.status}</td>
                        <td>${b.level.toFixed(2)}</td>
                        <td>${b.flow.toFixed(2)}</td>
-                       <td>${b.temp.toFixed(1)}</td>
-                       <td>${b.sediment ? 'Yes' : 'No'}</td>`;
+                       <td>${b.sediment ? 'Yes' : 'No'}</td>
+                       <td>${timestamp}</td>`;
       logBody.prepend(row);
+  
   
       markers[b.id].setStyle({ fillColor: STATUS_COLORS[b.status] });
       // Pulse effect for flood statuses by briefly increasing radius
@@ -409,13 +424,31 @@ const buoys = [
         tempChart.data.datasets[i].data.shift();
       }
   
+
+      function getLogTimestamp() {
+        const now = new Date();
+        return (
+          now.getFullYear() + "-" +
+          String(now.getMonth() + 1).padStart(2, "0") + "-" +
+          String(now.getDate()).padStart(2, "0") + " " +
+          String(now.getHours()).padStart(2, "0") + ":" +
+          String(now.getMinutes()).padStart(2, "0") + ":" +
+          String(now.getSeconds()).padStart(2, "0")
+        );
+      }
+
+      // usage in your table row:
+      const timestamp = getLogTimestamp();
+
+
       const row = document.createElement('tr');
-      row.innerHTML = `<td>${now}</td>
+      row.innerHTML = `
                        <td>${b.name}</td>
                        <td><span class="color-dot" style="background:${STATUS_COLORS[b.status]}"></span> ${b.status}</td>
                        <td>${b.level.toFixed(2)}</td>
                        <td>${b.flow.toFixed(2)}</td>
-                       <td>${b.sediment ? 'Yes' : 'No'}</td>`;
+                       <td>${b.sediment ? 'Yes' : 'No'}</td>
+                       <td>${timestamp}</td>`;
       logBody.prepend(row);
   
       markers[b.id].setStyle({ fillColor: STATUS_COLORS[b.status] });
