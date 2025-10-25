@@ -124,26 +124,18 @@ const buoys = [
   const map = L.map('map', { zoomControl: false }).setView([8.49, 124.82], 10);
   
   // Define the dark tile layer
-  var Stadia_AlidadeSmoothDark = L.tileLayer(
-    'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.{ext}', 
+  var positron = L.tileLayer(
+    'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
     {
-      minZoom: 0,
-      maxZoom: 20,
-      attribution:
-        '&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> ' +
-        '&copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> ' +
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      ext: 'png'
+      attribution: '&copy; OpenStreetMap contributors &copy; CartoDB',
+      subdomains: 'abcd',
+      maxZoom: 19
     }
   );
-
-  // Add it to the map
-  Stadia_AlidadeSmoothDark.addTo(map);
+  positron.addTo(map);
 
   L.control.zoom({ position: 'bottomright' }).addTo(map);
   const markers = {};
-  
-
   
   buoys.forEach(b => {
     const marker = L.circleMarker([b.lat, b.lng], {
